@@ -1,0 +1,283 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลางแนวนอน */
+    align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+    min-height: 100vh; /* ให้เต็มความสูงของหน้าจอ */
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/1.jpg') no-repeat center center fixed;
+    background-size: cover;
+    z-index: -1;
+  }
+  
+  .login-register-container {
+    background-color:#000000; /* สีดำอ่อนพร้อมความโปร่งแสง */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgb(250, 250, 250, 0.6); /* เพิ่มเงา */
+    text-align: center;
+    z-index: 1; /* ให้อยู่ด้านหน้าของ background */
+    max-width: 400px; /* กำหนดความกว้างของบล็อก */
+    width: 100%;
+  }
+  
+    
+  
+  .navbar {
+    position: fixed; /* ทำให้แถบ navbar ติดอยู่ด้านบน */
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 51, 102, 0.8);
+    padding: 10px 0;
+    z-index: 1; /* เพื่อให้ navbar อยู่ด้านหน้าขององค์ประกอบอื่นๆ */
+  }
+  
+  .navbar ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    
+  }
+  
+  .navbar ul li {
+    margin: 0 10px;
+  }
+  
+  .navbar ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .navbar ul li a:hover {
+    text-decoration: underline;
+  }
+  
+   .dashboard-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  input[type="text"], input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  button {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #218838;
+  }
+  
+  h2 {
+    color: #fff;
+    text-align: center;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-top: 60px;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: rgb(8, 1, 1);
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #00509E; /* Lighter blue background */
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .filter-section input,
+  .filter-section select,
+  .filter-section button {
+    margin: 0 10px;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+  }
+  
+  .filter-section input[type="text"] {
+    flex-grow: 1;
+  }
+  
+  .chart-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between; /* Aligns the charts side by side */
+  }
+  
+  .chart-row {
+    width: 48%; /* Adjust to fit two charts side by side */
+    margin-bottom: 50px;  
+    border: 2px solid #ccc; /* สร้างกรอบรอบกราฟ */
+    padding: 9px; /* เพิ่ม padding เพื่อเว้นระยะจากขอบกราฟ */
+    border-radius: 8px; /* เพิ่มความโค้งให้กับมุมกรอบ */
+    background-color: #ffffff; /* เพิ่มพื้นหลังสีขาวให้กับกราฟ */
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1); /* เพิ่มเงาให้กราฟดูมีมิติมากขึ้น */
+
+  }
+
+  .chart-container {
+    width: 48%; /* กำหนดให้กราฟแต่ละอันมีขนาดครึ่งหนึ่งของหน้าจอ */
+    margin-bottom: 20px;
+    border: 2px solid #ccc; /* สร้างกรอบรอบกราฟ */
+    padding: 10px; /* เพิ่ม padding เพื่อเว้นระยะจากขอบกราฟ */
+    border-radius: 8px; /* เพิ่มความโค้งให้กับมุมกรอบ */
+    background-color: #ffffff; /* เพิ่มพื้นหลังสีขาวให้กับกราฟ */
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1); /* เพิ่มเงาให้กราฟดูมีมิติมากขึ้น */
+  }
+  .drilldown-section {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .drilldown-section h2 {
+    margin-bottom: 10px;
+  }
+
+  .register-link {
+    color: white; /* สีข้อความ */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็น pointer */
+    text-decoration: underline; /* เพิ่มเส้นใต้ให้ข้อความ */
+    transition: color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .register-link:hover {
+    color: #646cff; /* เปลี่ยนสีเมื่อชี้ไปที่ข้อความ */
+  }
+
+  .register-link:active {
+    color: #003366; /* Color change on click */
+    transform: scale(0.95); /* Slightly reduce size on click for click effect */
+  }
+
+  .login-link {
+    color: white; /* สีข้อความ */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เป็น pointer */
+    text-decoration: underline; /* เพิ่มเส้นใต้ให้ข้อความ */
+    transition: color 0.3s ease, transform 0.1s ease;
+  }
+  
+  .login-link:hover {
+    color: #646cff; /* เปลี่ยนสีเมื่อชี้ไปที่ข้อความ */
+  }
+
+  .login-link:active {
+    color: #003366; /* Color change on click */
+    transform: scale(0.95); /* Slightly reduce size on click for click effect */
+  }
+  .username-display {
+    color: white;
+    font-size: 1.2em; /* เพิ่มขนาดฟอนต์ */
+    margin-right: auto; 
+  }
+
+  .styled-table {
+    width: 100%;
+    margin: 25px 0;
+    border-collapse: collapse;
+    font-size: 18px;
+    text-align: left;
+    border: 2px solid #4285F4; /* กำหนดกรอบที่เหมือนกราฟ */
+    border-radius: 8px; /* เพิ่มมุมมนเหมือนกราฟ */
+    background-color: white; /* ใส่สีพื้นหลังให้ตาราง */
+  }
+  
+  .styled-table thead tr {
+    background-color: #4285F4;
+    color: white;
+    text-align: left;
+  }
+  
+  .styled-table th, .styled-table td {
+    padding: 12px 15px;
+    border: 1px solid #dddddd; /* เพิ่มกรอบให้แต่ละเซลล์ */
+  }
+  
+  .styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+  }
+  
+  .styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+  }
+  
+  .styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #4285F4;
+  }
+  
+  .styled-table tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+
+  .upload-container {
+    background-color: rgba(255, 255, 255, 0.8); /* กำหนดสีพื้นหลังเป็นสีขาวพร้อมความโปร่งแสง */
+    padding: 30px; /* กำหนดพื้นที่ภายในให้กว้างขึ้น */
+    border-radius: 12px; /* ทำให้มุมกรอบโค้งมน */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้ดูเด่น */
+    border: 2px solid #FFFFFF; /* กำหนดกรอบสีขาว */
+    width: fit-content;
+    margin: auto; /* ทำให้กรอบอยู่ตรงกลาง */
+  }
+  
+  .data-table {
+    width: 49.5%; /* เปลี่ยนขนาดตารางให้เล็กลง */
+    margin-bottom: 49px; /* ปรับระยะห่างด้านล่าง */
+    border: 2px solid #ccc; /* ขอบของตาราง */
+    padding: 10px; /* Padding ภายในตาราง */
+    border-radius: 8px; /* มุมของตาราง */
+    background-color: #ffffff; /* สีพื้นหลังของตาราง */
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1); /* เงาของตาราง */
+    box-sizing: border-box; /* รวมขนาด padding และ border เข้ากับความกว้าง */
+  }
+  
+  .data-table th, .data-table td {
+    font-size: 12px; /* ปรับขนาดข้อความในตารางให้เล็กลง */
+    padding: 5px; /* Padding ภายในเซลล์ */
+  }
+  
+  
+  
+  
+  
+  
