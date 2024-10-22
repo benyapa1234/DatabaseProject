@@ -5,7 +5,7 @@ import { Chart } from "react-google-charts";
 const Dashboard = () => {
   const [dbData, setDbData] = useState([]);
   const [filterDate, setFilterDate] = useState("");
-  const [topN, setTopN] = useState("10"); // Default to Top 10
+  const [topN, setTopN] = useState("All"); // Default to Top 10
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -14,9 +14,10 @@ const Dashboard = () => {
       try {
         const response = await fetch("http://localhost:3000/getdata");
         const data = await response.json();
+        console.log(data)
         setDbData(data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data:", error); 
       }
     };
 
@@ -67,10 +68,10 @@ const Dashboard = () => {
       { type: "date", label: "Date" },
       { type: "number", label: "Cumulative Cases" },
     ],
-    ...filteredData.map((row) => [
-      new Date(row.date),
-      Number(row.patient_data),
-    ]),
+    ...filteredData.map((row) => {
+      const date = new Date(row.date);
+      return [date, Number(row.patient_data)];
+    }),
   ];
 
   const pieChartData = [
@@ -223,23 +224,24 @@ const Dashboard = () => {
         </div>
 
         <div className="chart-container data-table">
-          {/* <h2 style={{ color: 'black' }} >Cases by Region</h2> */}
           <table className="styled-table">
             <thead>
               <tr>
-                <th>Region</th>
-                <th>Cases</th>
+                <th>Date</th>
+                <th>Patient Data</th>
+                <th>Id Covid</th>
+                <th>Hospital Name</th>
+                <th>Location</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((row, index) => (
+              {dbData.map((row, index) => (
                 <tr key={index}>
-                  <td>
-                    {row.region === undefined || row.region === "Unknown"
-                      ? row.date
-                      : row.region}
-                  </td>
+                  <td>{row.date}</td>
                   <td>{row.patient_data}</td>
+                  <td>{row.id_covid}</td>
+                  <td>{row.hospital_name}</td>
+                  <td>{row.location}</td>
                 </tr>
               ))}
             </tbody>

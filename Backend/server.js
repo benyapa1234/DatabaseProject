@@ -139,13 +139,15 @@ app.get('/dashboard', checkAuth, (req, res) => {
     res.json({ message: 'Dashboard page' });
 });
 
-// app.get('/more', checkAuth, (req, res) => {
-//     res.json({ message: 'More page' });
-// });
+
 
 // Route สำหรับดึงข้อมูลจากตาราง data
 app.get('/getdata', (req, res) => {
-    const sql = 'SELECT * FROM data'; // ดึงข้อมูลจากตาราง 'data'
+    const sql = `
+        SELECT data.date, data.patient_data, c.id_covid, c.hospital_name, c.location
+        FROM data
+        JOIN covid_info c ON data.id_data = c.id_data 
+    `; // ดึงข้อมูลจากตาราง 'data'
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Error fetching data:', err);
