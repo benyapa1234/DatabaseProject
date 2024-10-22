@@ -1,164 +1,262 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const mysql = require('mysql2');
-const bcrypt = require('bcryptjs');
-const cors = require('cors'); // นำเข้า cors
-const jwt = require('jsonwebtoken'); // สำหรับ JWT
-const multer = require('multer'); // สำหรับการอัปโหลดไฟล์
-const xlsx = require('xlsx'); // สำหรับการอ่านไฟล์ Excel
-const app = express();
+// ./components/Dashboard.jsx
+import React, { useState, useEffect } from "react";
+import { Chart } from "react-google-charts";
 
-// กำหนดตัวเลือก CORS
-const corsOptions = {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],  // เพิ่ม Authorization และ Headers ที่จำเป็น
-    credentials: true,
+const Dashboard = () => {
+  const [dbData, setDbData] = useState([]);
+  const [filterDate, setFilterDate] = useState("");
+  const [topN, setTopN] = useState("All"); // Default to Top 10
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/getdata");
+        const data = await response.json();
+        console.log(data)
+        setDbData(data);
+      } catch (error) {
+        console.error("Error fetching data:", error); 
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleFilterChange = (e) => {
+    setFilterDate(e.target.value);
+  };
+
+  const handleTopNChange = (e) => {
+    setTopN(e.target.value);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Group data by date and sum patient_data
+  const groupedData = dbData.reduce((acc, curr) => {
+    const existing = acc.find((item) => item.date === curr.date);
+    if (existing) {
+      existing.patient_data += curr.patient_data;
+    } else {
+      acc.push({ ...curr });
+    }
+    return acc;
+  }, []);
+
+  const searchedData = groupedData.filter((row) =>
+    row.date.includes(searchQuery)
+  );
+
+  let filteredData = searchedData
+    .filter((row) => (filterDate ? row.date === filterDate : true))
+    .sort((a, b) => b.patient_data - a.patient_data);
+
+  if (topN !== "All") {
+    filteredData = filteredData.slice(0, parseInt(topN));
+  }
+
+  const uniqueDates = Array.from(
+    new Set(filteredData.map((row) => row.date))
+  ).sort();
+
+  const chartData = [
+    [
+      { type: "date", label: "Date" },
+      { type: "number", label: "Cumulative Cases" },
+    ],
+    ...filteredData.map((row) => {
+      const date = new Date(row.date);
+      return [date, Number(row.patient_data)];
+    }),
+  ];
+
+  const pieChartData = [
+    ["Region", "Cases"],
+    ...filteredData.map((row) => [
+      row.region === undefined || row.region === "Unknown"
+        ? row.date
+        : row.region,
+      Number(row.patient_data),
+    ]),
+  ];
+
+  const diffChartData = [
+    ["Date", "Cases", "Previous Cases"],
+    ...filteredData.map((row, index) => [
+      new Date(row.date),
+      Number(row.patient_data),
+      index > 0 ? Number(filteredData[index - 1].patient_data) : 0,
+    ]),
+  ];
+
+  const handleChartClick = (chartWrapper) => {
+    const chart = chartWrapper.getChart();
+    const dataTable = chartWrapper.getDataTable();
+
+    google.visualization.events.addListener(chart, "select", () => {
+      const selection = chart.getSelection();
+      if (selection.length > 0) {
+        const row = selection[0].row;
+        const date = dataTable.getValue(row, 0);
+        setSelectedDate(date.toISOString().split("T")[0]);
+      }
+    });
+  };
+
+  return (
+    <div className="container">
+      <h1 className="header" style={{ color: "white" }}>
+        COVID-19 Data Visualization
+      </h1>
+      <div className="filter-section">
+        <select value={filterDate} onChange={handleFilterChange}>
+          <option value="">Select a date (or leave empty for all dates)</option>
+          {uniqueDates.map((date, index) => (
+            <option key={index} value={date}>
+              {date}
+            </option>
+          ))}
+        </select>
+
+        <select value={topN} onChange={handleTopNChange}>
+          <option value="All">All</option>
+          <option value="1">Top 1</option>
+          <option value="10">Top 10</option>
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+          <option value="500">Top 500</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Search by date (YYYY-MM-DD)"
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+      </div>
+
+      <div className="chart-section">
+        <div className="chart-row">
+          <Chart
+            chartType="LineChart"
+            width="100%"
+            height="400px"
+            data={chartData}
+            options={{
+              title: "COVID-19 Cumulative Cases",
+              hAxis: { title: "Date" },
+              vAxis: { title: "Cumulative Cases" },
+            }}
+            chartEvents={[
+              {
+                eventName: "ready",
+                callback: ({ chartWrapper }) => handleChartClick(chartWrapper),
+              },
+            ]}
+          />
+        </div>
+        <div className="chart-row">
+          <Chart
+            chartType="BarChart"
+            width="100%"
+            height="400px"
+            data={chartData}
+            options={{
+              title: "COVID-19 Bar Chart",
+              hAxis: { title: "Date" },
+              vAxis: { title: "Cumulative Cases" },
+            }}
+          />
+        </div>
+        <div className="chart-row">
+          <Chart
+            chartType="AreaChart"
+            width="100%"
+            height="400px"
+            data={chartData}
+            options={{
+              title: "COVID-19 Area Chart",
+              isStacked: true,
+              hAxis: { title: "Date", format: "MMM dd, yyyy" },
+              vAxis: { title: "Cumulative Cases", minValue: 0 },
+              colors: ["#4285F4"],
+              backgroundColor: "#f1f1f1",
+              legend: { position: "top" },
+              areaOpacity: 0.4,
+            }}
+          />
+        </div>
+
+        <div className="chart-row">
+          <Chart
+            chartType="ComboChart"
+            width="100%"
+            height="400px"
+            data={diffChartData}
+            options={{
+              title: "COVID-19 Diff Chart",
+              vAxis: { title: "Cumulative Cases" },
+              hAxis: { title: "Date" },
+              seriesType: "bars",
+              series: { 1: { type: "line" } },
+              backgroundColor: "#f1f1f1",
+            }}
+          />
+        </div>
+        <div className="chart-row">
+          <Chart
+            chartType="PieChart"
+            width="100%"
+            height="400px"
+            data={pieChartData}
+            options={{
+              title: "COVID-19 Cases by Region",
+              slices: {
+                0: { offset: 0.1 }, // Offset the first slice
+              },
+              colors: ["#FF5733", "#34A853", "#4285F4", "#FBBC05", "#B9FBC0"],
+            }}
+          />
+        </div>
+
+        <div className="chart-container data-table">
+          <table className="styled-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Patient Data</th>
+                <th>Id Covid</th>
+                <th>Hospital Name</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dbData.map((row, index) => (
+                <tr key={index}>
+                  <td>{row.date}</td>
+                  <td>{row.patient_data}</td>
+                  <td>{row.id_covid}</td>
+                  <td>{row.hospital_name}</td>
+                  <td>{row.location}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {selectedDate && (
+        <div className="drilldown-section">
+          <h2>Details for {selectedDate}</h2>
+          <ul>{/* Display additional details here */}</ul>
+        </div>
+      )}
+    </div>
+  );
 };
 
-// ใช้ bodyParser และ cors
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cors(corsOptions)); 
-app.options('*', cors(corsOptions)); // ใช้ cors กับตัวเลือกที่กำหนด
-
-// สร้างการเชื่อมต่อกับฐานข้อมูล MySQL
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',  // ใส่รหัสผ่าน MySQL ของคุณที่นี่
-    database: 'userdb'
-});
-
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-db.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL Database');
-});
-
-// Middleware สำหรับตรวจสอบสถานะการเข้าสู่ระบบ
-const checkAuth = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized access. Please log in.' });
-    }
-    jwt.verify(token.split(' ')[1], 'your_jwt_secret', (err, decoded) => { 
-        if (err) {
-            return res.status(401).json({ message: 'Unauthorized access. Please log in.' });
-        }
-        req.userId = decoded.id; // เก็บ userId สำหรับใช้งานใน route ถัดไป
-        next();
-    });
-};
-
-// Endpoint สำหรับการสมัครสมาชิก (Register)
-app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required' });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const sql = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    db.query(sql, [username, hashedPassword], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: 'Error registering user' });
-        }
-        res.json({ message: 'User registered successfully' });
-    });
-});
-
-// Endpoint สำหรับการเข้าสู่ระบบ (Login)
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Username and password are required' });
-    }
-    const sql = 'SELECT * FROM users WHERE username = ?';
-    db.query(sql, [username], async (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: 'Error logging in' });
-        }
-        if (results.length === 0) {
-            return res.status(400).json({ message: 'User not found' });
-        }
-        const user = results[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Incorrect password' });
-        }
-
-        // สร้าง JWT Token
-        const token = jwt.sign({ id: user.id }, 'your_jwt_secret', { expiresIn: '1h' });
-        res.json({ message: 'Login successful', token });
-    });
-});
-
-// เริ่มต้นอัปโหลดไฟล์ Excel ด้วย Multer
-const storage = multer.memoryStorage(); // เก็บไฟล์ใน memory เพื่ออ่านได้ทันที
-const upload = multer({ storage });
-
-// API สำหรับการนำเข้าข้อมูลจากไฟล์ Excel
-app.post('/import', checkAuth, upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    // ตรวจสอบโครงสร้างข้อมูล
-    if (!worksheet.length || !worksheet[0].date || !worksheet[0].patient_data) {
-        return res.status(400).json({ message: 'Invalid data format in JSON' });
-    }
-
-    const query = 'INSERT INTO data (date, patient_data) VALUES (?, ?)';
-    const promises = worksheet.map(row => {
-        return new Promise((resolve, reject) => {
-            db.query(query, [row.date, row.patient_data], (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
-    });
-
-    Promise.all(promises)
-        .then(() => {
-            res.json({ message: 'Data imported successfully' });
-        })
-        .catch(err => {
-            console.error('Error inserting data:', err);
-            res.status(500).json({ message: 'Failed to import data' });
-        });
-});
-
-// Endpoints สำหรับหน้า Dashboard, More
-app.get('/dashboard', checkAuth, (req, res) => {
-    res.json({ message: 'Dashboard page' });
-});
-
-
-
-// Route สำหรับดึงข้อมูลจากตาราง data
-app.get('/getdata', (req, res) => {
-    const sql = `
-        SELECT data.date, data.patient_data, c.id_covid, c.hospital_name, c.location
-        FROM data
-        JOIN covid_info c ON data.id_data = c.id_data 
-    `; // ดึงข้อมูลจากตาราง 'data'
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Error fetching data:', err);
-            return res.status(500).json({ message: 'Failed to fetch data' });
-        }
-        res.json(results); // ส่งข้อมูลในรูปแบบ JSON กลับไปที่ Frontend
-    });
-});
-
-// เริ่มต้นเซิร์ฟเวอร์
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+export default Dashboard;

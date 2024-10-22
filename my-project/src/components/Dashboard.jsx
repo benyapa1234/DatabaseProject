@@ -1,11 +1,10 @@
-// ./components/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { Chart } from "react-google-charts";
 
 const Dashboard = () => {
   const [dbData, setDbData] = useState([]);
   const [filterDate, setFilterDate] = useState("");
-  const [topN, setTopN] = useState("All"); // Default to Top 10
+  const [topN, setTopN] = useState("All"); // Default to All
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -14,10 +13,10 @@ const Dashboard = () => {
       try {
         const response = await fetch("http://localhost:3000/getdata");
         const data = await response.json();
-        console.log(data)
+        console.log(data);
         setDbData(data);
       } catch (error) {
-        console.error("Error fetching data:", error); 
+        console.error("Error fetching data:", error);
       }
     };
 
@@ -53,6 +52,7 @@ const Dashboard = () => {
 
   let filteredData = searchedData
     .filter((row) => (filterDate ? row.date === filterDate : true))
+    .filter((row) => row.date >= "2019-01-01" && row.patient_data > 0) // Filter by date and positive patient_data
     .sort((a, b) => b.patient_data - a.patient_data);
 
   if (topN !== "All") {
@@ -63,15 +63,16 @@ const Dashboard = () => {
     new Set(filteredData.map((row) => row.date))
   ).sort();
 
+  // Prepare data for charts
   const chartData = [
     [
       { type: "date", label: "Date" },
       { type: "number", label: "Cumulative Cases" },
     ],
-    ...filteredData.map((row) => {
-      const date = new Date(row.date);
-      return [date, Number(row.patient_data)];
-    }),
+    ...filteredData.map((row) => [
+      new Date(row.date),
+      Number(row.patient_data),
+    ]),
   ];
 
   const pieChartData = [
@@ -235,15 +236,21 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {dbData.map((row, index) => (
-                <tr key={index}>
-                  <td>{row.date}</td>
-                  <td>{row.patient_data}</td>
-                  <td>{row.id_covid}</td>
-                  <td>{row.hospital_name}</td>
-                  <td>{row.location}</td>
+              {filteredData.length > 0 ? (
+                filteredData.map((row, index) => (
+                  <tr key={index}>
+                    <td>{row.date}</td>
+                    <td>{row.patient_data}</td>
+                    <td>{row.id_covid || 'null'}</td>
+                    <td>{row.hospital_name || 'null'}</td>
+                    <td>{row.location || 'null'}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5">No data available</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
